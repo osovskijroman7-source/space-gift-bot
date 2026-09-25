@@ -4,7 +4,6 @@ from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-# Виправлений токен бота
 BOT_TOKEN = "8896810293:AAE-N3t_QP-04OpXUPdjwqTI5j2XuCNW9_8"
 WEB_APP_URL = "https://osovskijroman7-source.github.io/space-gift-bot/"
 
