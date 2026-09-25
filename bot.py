@@ -1,5 +1,6 @@
 import asyncio
 import sqlite3
+import random
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from aiogram import Bot, Dispatcher, F, types
@@ -48,28 +49,30 @@ def get_user(user_id: int):
 MESSAGES = {
     "uk": {
         "disclaimer": (
-            "⚠️ **ВАЖЛИВА ІНФОРМАЦІЯ ТА ПРАВИЛА**\n"
-            "1. **Розважальний характер:** Ця гра створена виключно задля забави та розваги.\n"
-            "2. **Виплати та Подарунки:** Усі виграші виплачуються у вигляді офіційних Подарунків Telegram (Gifts).\n"
-            "3. **Конвертація в Зірки (Stars):** Ви можете обміняти отриманий подарунок назад у Telegram Stars."
+            "⚠️ **ПРАВИЛА ТА УМОВИ ГРИ**\n"
+            "1. **Депозит:** Для участі в грі та відкриття комірок на балансі необхідний активний депозит.\n"
+            "2. **Ризик (Бомби):** На полі заховані міни (💣). Якщо натрапите на бомбу — гра закінчується, а ставка згорає.\n"
+            "3. **Виплати:** Виграші виплачуються у вигляді офіційних Telegram Gifts."
         ),
-        "accept_btn": "✅ Я згоден і розумію правила",
-        "menu": f"🎮 **Головне меню:**\nГаманець: `{WALLET_ADDRESS}`\nНатисніть кнопку нижче, щоб відкрити Космічну Вежу 6х6.",
+        "accept_btn": "✅ Поповнити баланс і грати",
+        "menu": f"🎮 **Головне меню вежі 6х6:**\nГаманець для поповнення: `{WALLET_ADDRESS}`\nЗробіть депозит для активації гри нижче.",
         "rules_btn": "📜 Правила",
-        "play_btn": "🚀 Грати у Вежу 6х6",
+        "play_btn": "🚀 Відкрити Космічну Вежу",
+        "deposit_btn": "💳 Зробити депозит",
         "back_btn": "⬅️ Назад"
     },
     "en": {
         "disclaimer": (
-            "⚠️ **IMPORTANT INFORMATION & RULES**\n"
-            "1. **For Entertainment Only:** This game is created for fun.\n"
-            "2. **Payouts & Gifts:** All winnings are paid as official Telegram Gifts.\n"
-            "3. **Conversion to Stars:** You can convert gifts back to Telegram Stars."
+            "⚠️ **RULES & TERMS**\n"
+            "1. **Deposit:** Active deposit is required to play and open cells.\n"
+            "2. **Risk (Bombs):** Bombs (💣) are hidden on the grid. Hit one and lose your bet.\n"
+            "3. **Payouts:** Winnings are paid as official Telegram Gifts."
         ),
-        "accept_btn": "✅ I agree and understand",
-        "menu": f"🎮 **Main Menu:**\nWallet: `{WALLET_ADDRESS}`\nClick the button below to open Space Tower 6x6.",
+        "accept_btn": "✅ Deposit & Play",
+        "menu": f"🎮 **Tower 6x6 Main Menu:**\nDeposit Wallet: `{WALLET_ADDRESS}`\nMake a deposit to activate the game below.",
         "rules_btn": "📜 Rules",
-        "play_btn": "🚀 Play Tower 6x6",
+        "play_btn": "🚀 Open Space Tower",
+        "deposit_btn": "💳 Make Deposit",
         "back_btn": "⬅️ Back"
     }
 }
@@ -108,9 +111,27 @@ async def show_main_menu(callback: types.CallbackQuery):
     
     buttons = [
         [InlineKeyboardButton(text=texts["play_btn"], web_app=WebAppInfo(url=WEB_APP_URL))],
+        [InlineKeyboardButton(text=texts["deposit_btn"], callback_data="make_deposit")],
         [InlineKeyboardButton(text=texts["rules_btn"], callback_data="show_rules")]
     ]
     await callback.message.edit_text(texts["menu"], reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons), parse_mode="Markdown")
+    await callback.answer()
+
+@dp.callback_query(F.data == "make_deposit")
+async def deposit_handler(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+    user_data = get_user(user_id)
+    lang = user_data["language"]
+    
+    text = (
+        "💳 **Поповнення депозиту:**\n\n"
+        f"Надішліть TON або зірки на гаманець:\n`{WALLET_ADDRESS}`\n\n"
+        "Після переказу ваш баланс автоматично оновиться, і ви зможете грати у вежу!"
+    )
+    back_kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⬅️ Назад", callback_data="back_menu")]
+    ])
+    await callback.message.edit_text(text, reply_markup=back_kb, parse_mode="Markdown")
     await callback.answer()
 
 @dp.callback_query(F.data == "show_rules")
@@ -134,7 +155,7 @@ async def serve_webapp():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Space Gift - Вежа 6х6</title>
+        <title>Space Gift - Вежа 6х6 з мінами</title>
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
         <style>
             body {
@@ -172,46 +193,105 @@ async def serve_webapp():
                 justify-content: center; font-size: 18px; cursor: pointer; transition: all 0.2s ease; user-select: none;
             }
             .cell:active { transform: scale(0.9); background: rgba(79, 172, 254, 0.3); }
-            .cell.opened { background: rgba(0, 242, 254, 0.2); border-color: #00f2fe; box-shadow: 0 0 10px rgba(0, 242, 254, 0.4); }
+            .cell.opened-star { background: rgba(0, 242, 254, 0.2); border-color: #00f2fe; box-shadow: 0 0 10px rgba(0, 242, 254, 0.4); }
+            .cell.opened-bomb { background: rgba(255, 0, 0, 0.3); border-color: #ff4d4d; box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
             .hint { font-size: 13px; color: #a0aec0; margin-top: 15px; }
+            .btn-restart {
+                background: linear-gradient(45deg, #00f2fe, #4facfe); border: none; border-radius: 12px;
+                color: #fff; padding: 10px 20px; font-weight: bold; cursor: pointer; margin-top: 10px; display: none;
+            }
         </style>
     </head>
     <body>
         <div class="stars"></div>
         <div class="container">
-            <h1>🚀 Space Gift 6x6</h1>
+            <h1>🚀 Space Tower 6x6</h1>
             <div class="balance-card">
-                <div class="balance-title">Ваш Баланс</div>
-                <div class="balance-value" id="balance">0</div>
-                <div style="font-size: 11px; color: #718096;">Гаманець: UQBL...yPM5</div>
+                <div class="balance-title">Депозит / Баланс</div>
+                <div class="balance-value" id="balance">100</div>
+                <div style="font-size: 11px; color: #718096;">Обережно: на полі є бомби! 💣</div>
             </div>
             <div class="grid-tower" id="grid"></div>
-            <div class="hint">Тисни на комірки вежі, збирай космічні подарунки та збільшуй баланс!</div>
+            <div class="hint" id="status-text">Обирай комірки обережно, оминай бомби та збирай зірки!</div>
+            <button class="btn-restart" id="restartBtn" onclick="initGame()">Спробувати знову</button>
         </div>
         <script>
             const tg = window.Telegram.WebApp;
             tg.expand();
-            let score = 0;
+            
+            let balance = 100; // Початковий тестовий баланс (депозит)
+            let gameOver = false;
+            let bombs = [];
             const gridElement = document.getElementById('grid');
             const balanceElement = document.getElementById('balance');
+            const statusText = document.getElementById('status-text');
+            const restartBtn = document.getElementById('restartBtn');
 
-            for (let i = 0; i < 36; i++) {
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                cell.innerHTML = '🎁';
-                cell.addEventListener('click', () => {
-                    if (!cell.classList.contains('opened')) {
-                        cell.classList.add('opened');
-                        cell.innerHTML = '⭐';
-                        score += 10;
-                        balanceElement.innerText = score;
-                        if (tg.HapticFeedback) {
-                            tg.HapticFeedback.impactOccurred('medium');
-                        }
+            function initGame() {
+                gridElement.innerHTML = '';
+                gameOver = false;
+                restartBtn.style.display = 'none';
+                statusText.innerText = 'Обирай комірки обережно, оминай бомби та збирай зірки!';
+                
+                // Рандомно розкидаємо 6 бомб по 36 комірках за допомогою випадкового рандому
+                bombs = [];
+                while(bombs.length < 6) {
+                    let r = Math.floor(Math.random() * 36);
+                    if(!bombs.includes(r)) bombs.push(r);
+                }
+
+                for (let i = 0; i < 36; i++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.index = i;
+                    cell.innerHTML = '❓';
+                    cell.addEventListener('click', () => handleCellClick(cell, i));
+                    gridElement.appendChild(cell);
+                }
+            }
+
+            function handleCellClick(cell, index) {
+                if (gameOver || cell.classList.contains('opened-star') || cell.classList.contains('opened-bomb')) return;
+
+                if (balance < 10) {
+                    statusText.innerText = '⚠️ Недостатньо коштів на депозиті! Поповніть баланс через бота.';
+                    return;
+                }
+
+                balance -= 5; // вартість спроби
+                balanceElement.innerText = balance;
+
+                if (bombs.includes(index)) {
+                    // Натрапив на бомбу! Рандом спрацював проти гравця
+                    cell.classList.add('opened-bomb');
+                    cell.innerHTML = '💣';
+                    gameOver = true;
+                    statusText.innerText = '💥 Ви натрапили на бомбу! Гра закінчена.';
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                    revealAll();
+                } else {
+                    // Знайшов подарунок/зірку
+                    cell.classList.add('opened-star');
+                    cell.innerHTML = '⭐';
+                    balance += 15; // виграш
+                    balanceElement.innerText = balance;
+                    statusText.innerText = '🎉 Чудово! Ви знайшли космічну зірку (+15)!';
+                    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                }
+            }
+
+            function revealAll() {
+                const cells = document.querySelectorAll('.cell');
+                cells.forEach((c, idx) => {
+                    if (bombs.includes(idx)) {
+                        c.classList.add('opened-bomb');
+                        c.innerHTML = '💣';
                     }
                 });
-                gridElement.appendChild(cell);
+                restartBtn.style.display = 'block';
             }
+
+            initGame();
         </script>
     </body>
     </html>
