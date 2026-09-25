@@ -1,15 +1,15 @@
 import os
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-TOKEN = os.getenv("BOT_TOKEN", "8896810293:AAE-N3t_QP-040pXUPdjwqTI5j2XuCNW9_8")
+TOKEN = os.getenv("BOT_TOKEN", "8896810293:AAE-N3t_QP-04OpXUPdjwqTI5j2XuCNW9_8")
 WEBAPP_URL = "https://osovskijroman7-source.github.io/space-gift-bot/"
 
 logging.basicConfig(level=logging.INFO)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [[InlineKeyboardButton("🚀 Играть в Space Gift", web_app=WebAppInfo(url=WEBAPP_URL))]]
+    keyboard = [[InlineKeyboardButton("🚀 Играть", web_app={"url": WEBAPP_URL})]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
         "Привет! Нажми кнопку ниже, чтобы запустить мини-приложение:",
