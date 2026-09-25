@@ -1,27 +1,117 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Gift App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Space Gift Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b, #0f172a);
+            color: #ffffff;
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            margin: 0;
-            background-color: #0f172a;
-            color: #ffffff;
+            overflow: hidden;
+            user-select: none;
         }
-        h1 { margin-bottom: 10px; }
+
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #38bdf8;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        .balance-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .balance-title {
+            font-size: 14px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .balance-value {
+            font-size: 40px;
+            font-weight: bold;
+            color: #facc15;
+            margin-top: 5px;
+            text-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
+        }
+
+        .click-btn {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border: none;
+            border-radius: 50%;
+            width: 180px;
+            height: 180px;
+            font-size: 70px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(168, 85, 247, 0.4);
+            transition: transform 0.1s active;
+            outline: none;
+        }
+
+        .click-btn:active {
+            transform: scale(0.92);
+        }
+
+        .hint {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
-    <h1>🚀 Mini App Запущен!</h1>
-    <p>Добро пожаловать в Space Gift.</p>
+    <div class="container">
+        <h1>🚀 Space Gift</h1>
+        
+        <div class="balance-card">
+            <div class="balance-title">Ваш Баланс</div>
+            <div class="balance-value" id="score">0</div>
+        </div>
+
+        <button class="click-btn" id="clickBtn">🎁</button>
+
+        <div class="hint">Тисни на подарунок, щоб збирати бали!</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Розгортаємо Mini App на повний екран
+
+        let score = 0;
+        const scoreElement = document.getElementById('score');
+        const clickBtn = document.getElementById('clickBtn');
+
+        clickBtn.addEventListener('click', () => {
+            score += 1;
+            scoreElement.textContent = score;
+
+            // Вібрація при натисканні (працює в Telegram на смартфоні)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        });
+    </script>
 </body>
 </html>
