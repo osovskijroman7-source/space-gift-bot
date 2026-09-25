@@ -7,7 +7,6 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 BOT_TOKEN = "8896810293:AAE-N3t_QP-040pXUPdjwqTI"
-# Замініть на ваше реальне посилання на Render
 WEB_APP_URL = "https://space-gift-bot.onrender.com"
 WALLET_ADDRESS = "UQBLhA0jSJthqPS8UNRAvuq6HMUMsM56vbQZtTPCPhKEyPM5"
 
@@ -15,7 +14,6 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 app = FastAPI()
 
-# База даних
 def init_db():
     with sqlite3.connect("game_database.db") as conn:
         cursor = conn.cursor()
@@ -47,7 +45,6 @@ def get_user(user_id: int):
             return {"language": row[0], "balance": row[1], "wallet": row[2]}
         return {"language": "en", "balance": 0, "wallet": ""}
 
-# Тексти та переклади
 MESSAGES = {
     "uk": {
         "disclaimer": (
@@ -77,7 +74,6 @@ MESSAGES = {
     }
 }
 
-# Телеграм хендлери
 @dp.message(Command("start"))
 async def start_command(message: types.Message):
     init_db()
@@ -130,7 +126,6 @@ async def show_rules_handler(callback: types.CallbackQuery):
     await callback.message.edit_text(texts["disclaimer"], reply_markup=back_kb, parse_mode="Markdown")
     await callback.answer()
 
-# FastAPI маршрут для красивого інтерфейсу міні-додатка (Сітка 6х6 + космос)
 @app.get("/", response_class=HTMLResponse)
 async def serve_webapp():
     return """
@@ -222,7 +217,6 @@ async def serve_webapp():
     </html>
     """
 
-# Фоновий запуск бота разом із сервером
 async def run_bot():
     init_db()
     await dp.start_polling(bot)
