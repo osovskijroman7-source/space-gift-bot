@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
-BOT_TOKEN = "8896810293:AAE-N3t_QP-04OpXUPdjwqTI5j2XuCNW9_8"
+BOT_TOKEN = "8778529455:AAGxKB1IaXbRyrFX4RBO0GFfUWiENI5hhFo"
 WEB_APP_URL = "https://space-gift-bot.onrender.com"
 WALLET_ADDRESS = "UQBLhA0jSJthqPS8UNRAvuq6HMUMsM56vbQZtTPCPhKEyPM5"
 
